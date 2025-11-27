@@ -1,4 +1,4 @@
-\documentclass[a4paper,11pt]{article}
+\documentclass[a4paper,11pt,twocolumn]{article}
 
 \usepackage{luatexja}
 \usepackage{luatexja-fontspec}
@@ -7,12 +7,12 @@
 \usepackage{here}
 \usepackage{url}
 \usepackage{cite}
+\usepackage{amsmath}
 
-
-\setlength{\textwidth}{160mm}
-\setlength{\oddsidemargin}{0mm}
-\setlength{\textheight}{240mm}
-\setlength{\topmargin}{-10mm}
+\setlength{\textwidth}{170mm}
+\setlength{\oddsidemargin}{-5mm}
+\setlength{\textheight}{250mm}
+\setlength{\topmargin}{-15mm}
 
 \title{%
 BLE電波強度を用いた屋内位置推定手法の精度評価と改善に関する研究\\
@@ -31,7 +31,35 @@ BLE電波強度を用いた屋内位置推定手法の精度評価と改善に�
 \maketitle
 
 \section{序論}
-本研究では、Bluetooth Low Energy（BLE）ビーコンを用いた屋内位置推定に関する手法の検討と精度改善を目的とする。
+
+近年、スマートフォンや IoT デバイスの普及に伴い、屋内環境における位置情報サービスの需要が高まっている。
+屋外では GPS による位置推定が一般的である一方、建物内部では電波遮蔽により測位精度が大きく低下するため、代替手法として
+Wi-Fi、BLE（Bluetooth Low Energy）、UWB などの無線技術を用いた屋内測位手法が注目されている。
+
+その中でも BLE は省電力・低コスト・スマートフォン標準搭載という利点から、実運用に適した技術として広く研究が進められている。
+しかし、BLE 電波強度（RSSI: Received Signal Strength Indicator）は外乱の影響を強く受け、瞬間的なノイズや反射により
+値が大きく変動するという問題がある。そのため、RSSI を距離に変換して位置推定に利用する手法では、
+外れ値によって数 m ～ 数十 m の誤差が生じ、安定した測位精度を確保することが困難である。
+
+本研究の目的は以下の 2 点である。
+\begin{itemize}
+    \item BLE RSSI のノイズ特性を考慮した平滑化手法を設計・実装し、測位精度を改善すること
+    \item 実測データに基づき、平滑化処理の有無による位置推定精度を比較評価すること
+\end{itemize}
+
+本稿では、BLE 測位システムの構築方法、平滑化アルゴリズム、評価実験の手法および結果について報告し、
+今後の改善点についても議論する。
+
+\section{研究内容：BLEを用いた屋内位置推定手法}
+BLEを用いた屋内測位の精度改善については Shuang ら \cite{shuang2017ipin} によって多点測位手法が提案されている。
+
+\section{今後の計画}
+
+\section{参考文献}
+\bibliographystyle{unsrt}
+\bibliography{refs}
+
+\end{document}
 
 \section{研究内容：BLEを用いた屋内位置推定手法}
 BLEを用いた屋内測位の精度改善については Shuang ら \cite{shuang2017ipin} によって多点測位手法が提案されている。
