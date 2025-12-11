@@ -1,0 +1,173 @@
+\documentclass[a4paper,11pt,twocolumn]{article}
+
+\usepackage{luatexja}
+\usepackage{luatexja-fontspec}
+\setmainjfont{IPAexMincho}
+\usepackage{graphicx}
+\usepackage{here}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{amsmath}
+
+\setlength{\textwidth}{170mm}
+\setlength{\oddsidemargin}{-5mm}
+\setlength{\textheight}{250mm}
+\setlength{\topmargin}{-15mm}
+
+\title{%
+BLE電波強度を用いた屋内位置推定手法の精度評価と改善に関する研究\\
+\large 
+}
+
+\author{%
+近畿大学 情報学部 情報学科\\
+学籍番号：2312110159\\
+氏名：内山敦也
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{序論}
+
+近年、スマートフォンや IoT デバイスの普及に伴い、屋内環境における位置情報サービスの需要が高まっている。
+屋外では GPS による位置推定が一般的である一方、建物内部では電波遮蔽により測位精度が大きく低下するため、代替手法として
+Wi-Fi、BLE（Bluetooth Low Energy）、UWB などの無線技術を用いた屋内測位手法が注目されている。
+
+その中でも BLE は省電力・低コスト・スマートフォン標準搭載という利点から、実運用に適した技術として広く研究が進められている。
+しかし、BLE 電波強度（RSSI: Received Signal Strength Indicator）は外乱の影響を強く受け、瞬間的なノイズや反射により
+値が大きく変動するという問題がある。そのため、RSSI を距離に変換して位置推定に利用する手法では、
+外れ値によって数 m ～ 数十 m の誤差が生じ、安定した測位精度を確保することが困難である。
+
+本研究の目的は以下の 2 点である。
+\begin{itemize}
+    \item BLE RSSI のノイズ特性を考慮した平滑化手法を設計・実装し、測位精度を改善すること
+    \item 実測データに基づき、平滑化処理の有無による位置推定精度を比較評価すること
+\end{itemize}
+
+本稿では、BLE 測位システムの構築方法、平滑化アルゴリズム、評価実験の手法および結果について報告し、
+今後の改善点についても議論する。
+
+\section{研究内容：BLEを用いた屋内位置推定手法}
+
+本研究では，BLE（Bluetooth Low Energy）の電波強度 RSSI（Received Signal Strength Indicator）を用いて
+屋内環境におけるタグ位置を推定するシステムを構築し，RSSI の変動特性に対する平滑化処理および
+多点測位アルゴリズムの有効性を評価する。
+
+本節では，(1) RSSI を距離に変換する受信モデル，(2) 位置推定に用いる最小二乗法に基づく多点測位，
+(3) ノイズ低減のためのロバスト平滑化手法について述べる。
+
+\subsection{RSSI から距離への変換モデル}
+
+BLE電波の受信強度は，送受信間の距離だけでなく遮蔽物・反射・人体吸収・デバイスの向きによって大きく変動する。
+一般に RSSI と距離 $d$ の関係は対数距離パス損失モデルにより次式で表される \cite{shuang2017ipin}。
+
+\begin{equation}
+d = 10^{\frac{(RSSI_{0} - RSSI)}{10n}},
+\label{eq:pathloss}
+\end{equation}
+
+ここで，$RSSI_0$ は 1 m 離れたときの基準 RSSI，$n$ はパス損失指数（環境に依存し $1.6 \sim 3.5$ の値をとる）である。
+BLE タグの向きが変化すると，電波の指向性の影響により RSSI が 3--10 dB 程度変動することがあり，
+式 (\ref{eq:pathloss}) より距離推定誤差が 2--3 倍に拡大することが知られている。
+本研究では ESP32/M5 デバイスを複数設置し，各アンカーからの RSSI を用いてタグの距離を推定する。
+
+\subsection{多点測位による位置推定（最小二乗法）}
+
+アンカー $i$ の座標を $(x_i, y_i)$，推定対象のタグ位置を $(x, y)$，
+式 (\ref{eq:pathloss}) により得られた距離推定値を $d_i$ とすると，
+幾何学的関係は次式で表される。
+
+\begin{equation}
+\sqrt{(x - x_i)^2 + (y - y_i)^2} \approx d_i.
+\end{equation}
+
+本研究では，$N$ 個のアンカーに対する誤差二乗和
+
+\begin{equation}
+E(x, y) = \sum_{i=1}^{N} \left( \sqrt{(x - x_i)^2 + (y - y_i)^2} - d_i \right)^2
+\label{eq:loss}
+\end{equation}
+
+を最小化することで位置 $(x,y)$ を推定する。
+式 (\ref{eq:loss}) の解析的解は複雑であるため，本研究では勾配降下法を用いて逐次的に最適値を求める。
+
+誤差関数の偏微分は次式で与えられる。
+
+\begin{align}
+\frac{\partial E}{\partial x}
+&= \sum_{i=1}^{N} 2\left( R_i - d_i \right)\frac{x - x_i}{R_i}, \\
+\frac{\partial E}{\partial y}
+&= \sum_{i=1}^{N} 2\left( R_i - d_i \right)\frac{y - y_i}{R_i},
+\end{align}
+
+ただし，
+
+\begin{equation}
+R_i = \sqrt{(x - x_i)^2 + (y - y_i)^2}.
+\end{equation}
+
+これを用いて推定位置は以下の更新式で求められる。
+
+\begin{align}
+x &\leftarrow x - \eta \frac{\partial E}{\partial x}, \\
+y &\leftarrow y - \eta \frac{\partial E}{\partial y},
+\end{align}
+
+ここで $\eta$ は学習率である。
+本研究では $\eta = 0.01$，反復回数 100 回程度で収束することを確認した。
+
+\subsection{RSSIのロバスト平滑化処理}
+
+BLE の RSSI は瞬間的なノイズが多く，単純平均では外れ値の影響を強く受ける。
+そのため，各アンカー $i$ に対して直近 $M$ 個（本研究では $M = 5$）の RSSI 値集合
+$\{r_{i,1}, r_{i,2}, \dots , r_{i,M}\}$ を保持し，
+
+中央値 $m_i$ と平均値 $\bar{r}_i$ を用いたロバスト推定値
+
+\begin{equation}
+RSSI_i^{*} = \frac{m_i + \bar{r}_i}{2}
+\end{equation}
+
+を新たな RSSI 値として採用する。
+これにより単純平均に比べ外れ値に強く，かつ中央値よりも変動に滑らかに追従する特徴を持つ。
+
+平滑化後の RSSI を式 (\ref{eq:pathloss}) に代入することで距離推定の安定性が向上し，
+結果として位置推定誤差の低減が期待できる。
+
+\subsection{提案手法の概要}
+
+本研究で構築した BLE 測位アルゴリズム全体の流れは以下のとおりである。
+
+\begin{enumerate}
+    \item 各アンカーが BLE 広告パケットを受信し RSSI を取得する
+    \item 直近 $M$ 個の RSSI に対して中央値＋平均の平滑化処理を行う
+    \item 平滑化された RSSI から距離 $d_i$ を推定する
+    \item 最小二乗法に基づき $(x,y)$ 座標を勾配降下法で推定する
+    \item 推定結果をサーバに送信しログ化・可視化を行う
+\end{enumerate}
+
+以上の手法を基に，アンカー台数・配置・タグの向きが測位精度に与える影響を総合的に評価する。
+
+\section{今後の計画}
+
+\section{参考文献}
+\bibliographystyle{unsrt}
+\bibliography{refs}
+
+\end{document}
+
+\section{研究内容：BLEを用いた屋内位置推定手法}
+BLEを用いた屋内測位の精度改善については Shuang ら \cite{shuang2017ipin} によって多点測位手法が提案されている。
+
+
+\section{今後の計画}
+
+
+\section{参考文献}
+\bibliographystyle{unsrt}
+\bibliography{refs}
+
+\end{document}
