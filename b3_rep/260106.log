@@ -1,7 +1,7 @@
-This is LuaHBTeX, Version 1.21.0 (TeX Live 2025/Homebrew)  (format=lualatex 2025.3.7)  5 JAN 2026 15:59
+This is LuaHBTeX, Version 1.21.0 (TeX Live 2025/Homebrew)  (format=lualatex 2025.3.7)  5 JAN 2026 16:00
  restricted system commands enabled.
-**251216.tex
-(./251216.tex
+**260106.tex
+(./260106.tex
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
 Lua module: luaotfload 2024-12-03 v3.29 Lua based OpenType font support
@@ -663,8 +663,8 @@ LaTeX Info: Redefining \Relbar on input line 970.
 \mathdisplay@stack=\toks33
 LaTeX Info: Redefining \[ on input line 2953.
 LaTeX Info: Redefining \] on input line 2954.
-) (./251216.aux)
-\openout1 = 251216.aux
+) (./260106.aux)
+\openout1 = 260106.aux
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 30.
 LaTeX Font Info:    ... okay on input line 30.
@@ -837,14 +837,14 @@ LaTeX Font Info:    Font shape `JY3/IPAexMincho(0)/b/n' will be
 
 LaTeX Warning: Citation `shuang2017ipin' on page 1 undefined on input line 65.
 
-No file 251216.bbl.
+No file 260106.bbl.
 
 
 [1{/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/map/pdftex/upd
 map/pdftex.map}
 
 
-] (./251216.aux)
+] (./260106.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
@@ -886,7 +886,7 @@ e/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></opt/home
 brew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/c
 msy10.pfb></opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/
 public/amsfonts/cm/cmsy6.pfb>
-Output written on 251216.pdf (1 page, 307958 bytes).
+Output written on 260106.pdf (1 page, 307958 bytes).
 
 PDF statistics: 78 PDF objects out of 1000 (max. 8388607)
  49 compressed objects within 1 object stream
