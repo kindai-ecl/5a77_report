@@ -1,0 +1,15 @@
+\begin{thebibliography}{1}
+
+\bibitem{radford2023whisper}
+Alec Radford, Jong~Wook Kim, Tao Xu, Greg Brockman, Christine McLeavey, and
+  Ilya Sutskever.
+\newblock Robust speech recognition via large-scale weak supervision.
+\newblock In {\em International Conference on Machine Learning (ICML)}, pp.
+  28492--28518. PMLR, 2023.
+
+\bibitem{kawahara2016}
+河原達也.
+\newblock 音声認識の実用化動向と今後の展望.
+\newblock 情報処理, Vol.~57, No.~10, pp. 1018--1021, 2016.
+
+\end{thebibliography}

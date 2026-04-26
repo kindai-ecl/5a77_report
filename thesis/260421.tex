@@ -1,0 +1,162 @@
+\documentclass[a4paper,12pt,ja=standard,lualatex]{bxjsarticle}
+\usepackage{luatexja} % 日本語対応
+
+\usepackage{graphicx} % dvipdfmx削除
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage[numbers]{natbib}
+\usepackage{amsmath, amssymb}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+\title{卒業研究報告書}
+\author{内山 敦也}
+\date{2025年4月21日} 
+
+\begin{document}
+\maketitle
+
+\section{卒業研究進捗}
+
+\subsection{【検討中】卒業研究タイトル案}
+\begin{itemize}
+    \item 音声認識を用いた作業ログ自動記録システムの構築と業務効率化に関する研究
+\end{itemize}
+
+\subsection{序論}
+
+本研究では、音声認識技術を用いて作業内容をリアルタイムに記録し、業務効率化を図るシステムの構築を目的とする。従来の作業記録は手入力に依存しており、入力の手間や記録漏れといった課題が存在する。本研究では、マイク入力による音声データを解析し、自動的に作業ログとして記録する仕組みを提案する。
+
+\subsection{関連研究}
+本研究に関連する先行研究として、主に「音声認識の業務利用」および「基盤モデル（Whisper、GPT）の発展」の2つの観点から述べる。
+
+\subsubsection*{音声認識の業務利用と課題}
+音声入力を活用した作業記録や業務支援システムは、これまでにも医療現場や保守点検の分野を中心に研究・実用化が進められてきた。河原 \cite{kawahara2016} は、音声認識の実用化動向において、現場の環境雑音や未知語（システムに登録されていない語彙）への対応が実運用上の課題であると指摘している。従来のシステムは特定の語彙やテンプレートに依存するものが多く、自由発話から柔軟に作業ログを抽出することは困難であった。
+
+\subsubsection*{大規模基盤モデルの活用}
+近年、深層学習を用いた大規模基盤モデルの登場により、音声認識および自然言語処理の精度が飛躍的に向上している。音声認識モデルであるWhisper \cite{radford2023whisper} は、大規模かつ多様なデータセットで学習されており、雑音環境下や専門用語に対しても高いロバスト性を持つことが示されている。
+また、大規模言語モデル（LLM）であるGPT-4 \cite{openai2023gpt4} などの登場により、テキストの文脈を深く理解し、非構造化データから意図を抽出することが容易になった。
+
+本研究はこれらの実際の研究動向を踏まえ、高精度な音声認識（Whisper）と柔軟な意味解析（GPT）を組み合わせることで、従来のシステムでは困難であった「自由発話からの正確な作業ログ分類」を実現する点に新規性がある。
+
+\subsection{研究内容}
+
+本研究では、マイクから取得した音声データをリアルタイムに処理し、作業ログとして記録するシステムを構築する。具体的には、音声データをテキストに変換し、その内容から作業開始・終了および作業内容を抽出する。
+
+本システムは以下の構成で動作する。
+
+\begin{itemize}
+    \item マイクによる音声入力
+    \item 音声認識（Whisper）によるテキスト変換
+    \item 自然言語処理（GPT）による意図解析
+    \item データベースへの作業ログ保存
+\end{itemize}
+
+これにより、ユーザはキーボード操作を行うことなく、音声のみで作業記録を行うことが可能となる。
+
+\subsection{現状課題}
+
+従来の作業記録には以下の課題が存在する。
+
+\begin{itemize}
+    \item 手入力による記録の手間
+    \item 作業中の記録忘れ
+    \item 作業時間の正確な把握が困難
+\end{itemize}
+
+また、音声認識を利用する場合にも、誤認識や曖昧な表現の解釈といった問題が存在する。
+
+\subsection{これから実施すること}
+
+音声認識を用いた作業ログシステムの実現に向けて、以下の4つの観点から開発・検証を行う。
+
+\subsection*{1. 音声認識精度の評価}
+
+音声入力から正確にテキストへ変換できるかを評価する。
+
+\subsection*{目的}
+音声認識の精度を確認し、実用可能性を検証する。
+
+\subsection*{フロー図}
+\begin{center}
+マイク入力 \\
+\(\downdownarrows\) \\
+音声データ取得 \\
+\(\downdownarrows\) \\
+テキスト変換（Whisper）
+\end{center}
+
+\subsection*{2. 作業開始・終了の判定}
+
+テキストから作業の開始・終了を判定する。
+
+\subsection*{目的}
+作業時間を自動で計測するための基盤を構築する。
+
+\subsection*{フロー図}
+\begin{center}
+音声テキスト \\
+\(\downdownarrows\) \\
+キーワード判定（開始・終了） \\
+\(\downdownarrows\) \\
+作業状態の更新
+\end{center}
+
+\subsection*{3. 作業内容の分類}
+
+自然言語処理を用いて作業内容を分類する。
+
+\subsection*{目的}
+作業の種類を自動的に整理し、分析可能にする。
+
+\subsection*{フロー図}
+\begin{center}
+音声テキスト \\
+\(\downdownarrows\) \\
+GPTによる意味解析 \\
+\(\downdownarrows\) \\
+作業カテゴリの決定
+\end{center}
+
+\subsection*{4. 作業ログの蓄積と可視化}
+
+記録されたデータを蓄積し、分析可能な形式で保存する。
+
+\subsection*{目的}
+作業時間や傾向を把握し、業務改善に活用する。
+
+\subsection*{フロー図}
+\begin{center}
+作業データ \\
+\(\downdownarrows\) \\
+データベース保存 \\
+\(\downdownarrows\) \\
+可視化・分析
+\end{center}
+
+\subsection{現時点での結果}
+\begin{itemize}
+    \item 音声入力からテキスト変換までの基本機能は実装済み
+    \item 簡単なキーワードによる開始・終了判定が可能
+    \item 作業ログの簡易的な保存機能を確認
+\end{itemize}
+
+\subsection{想定される考察}
+
+音声入力による作業記録は、手入力に比べて入力コストを大幅に削減できると考えられる。また、リアルタイムでの記録により、作業時間の正確な把握が可能になると推察される。一方で、音声認識の誤差や曖昧な発話に対する対応が重要な課題となる。
+
+\subsection{想定される結論}
+
+音声認識と自然言語処理を組み合わせることで、作業ログの自動化が可能となり、業務効率の向上に寄与することが期待される。また、本システムはタスク管理や工数管理など、さまざまな業務への応用が可能である。
+
+\subsection{利用ツール}
+\begin{itemize}
+    \item Whisper：音声認識によるテキスト変換
+    \item Python：システム実装
+    \item Flask：Webアプリケーション化（予定）
+\end{itemize}
+
+\bibliographystyle{jplain}
+\bibliography{refs}
+
+\end{document}

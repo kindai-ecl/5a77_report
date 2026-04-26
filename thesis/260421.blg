@@ -1,0 +1,49 @@
+This is upBibTeX, Version 0.99d-j0.36-u2.00 (utf8.uptex) (TeX Live 2025/Homebrew)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: 260421.aux
+The style file: jplain.bst
+Database file #1: refs.bib
+Warning--I didn't find a database entry for "openai2023gpt4"
+You've used 2 entries,
+            2620 wiz_defined-function locations,
+            609 strings with 4970 characters,
+and the built_in function-call counts, 1250 in all, are:
+= -- 120
+> -- 39
+< -- 4
++ -- 16
+- -- 14
+* -- 74
+:= -- 163
+add.period$ -- 7
+call.type$ -- 2
+change.case$ -- 13
+chr.to.int$ -- 0
+cite$ -- 2
+duplicate$ -- 64
+empty$ -- 99
+format.name$ -- 21
+if$ -- 293
+int.to.chr$ -- 0
+int.to.str$ -- 2
+missing$ -- 2
+newline$ -- 13
+num.names$ -- 4
+pop$ -- 22
+preamble$ -- 1
+purify$ -- 11
+quote$ -- 0
+skip$ -- 63
+stack$ -- 0
+substring$ -- 98
+swap$ -- 28
+text.length$ -- 4
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 8
+warning$ -- 0
+while$ -- 10
+width$ -- 3
+write$ -- 25
+is.kanji.str$ -- 25
+(There was 1 warning)
