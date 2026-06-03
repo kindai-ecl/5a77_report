@@ -1,0 +1,31 @@
+\contentsline {section}{\numberline {1}序論}{1}{}%
+\contentsline {subsection}{\numberline {1.1}本研究の背景}{1}{}%
+\contentsline {subsection}{\numberline {1.2}本研究の目的}{1}{}%
+\contentsline {subsection}{\numberline {1.3}本書の構成}{1}{}%
+\contentsline {section}{\numberline {2}関連技術・関連研究}{2}{}%
+\contentsline {subsection}{\numberline {2.1}関連技術}{2}{}%
+\contentsline {subsubsection}{\numberline {2.1.1}Whisper}{2}{}%
+\contentsline {subsubsection}{\numberline {2.1.2}GPT}{2}{}%
+\contentsline {subsection}{\numberline {2.2}関連研究}{2}{}%
+\contentsline {subsubsection}{\numberline {2.2.1}音声認識の業務利用と課題}{2}{}%
+\contentsline {section}{\numberline {3}研究内容}{3}{}%
+\contentsline {subsection}{\numberline {3.1}音声認識精度の評価}{3}{}%
+\contentsline {paragraph}{目的}{3}{}%
+\contentsline {paragraph}{処理フロー}{3}{}%
+\contentsline {subsection}{\numberline {3.2}作業開始・終了の判定}{3}{}%
+\contentsline {paragraph}{目的}{3}{}%
+\contentsline {paragraph}{処理フロー}{3}{}%
+\contentsline {subsection}{\numberline {3.3}作業内容の分類}{3}{}%
+\contentsline {paragraph}{目的}{4}{}%
+\contentsline {paragraph}{処理フロー}{4}{}%
+\contentsline {subsection}{\numberline {3.4}作業ログの蓄積と可視化}{4}{}%
+\contentsline {paragraph}{目的}{4}{}%
+\contentsline {paragraph}{処理フロー}{4}{}%
+\contentsline {subsection}{\numberline {3.5}利用ツール}{4}{}%
+\contentsline {section}{\numberline {4}結果・考察}{5}{}%
+\contentsline {subsection}{\numberline {4.1}現時点での開発結果}{5}{}%
+\contentsline {subsection}{\numberline {4.2}考察}{5}{}%
+\contentsline {section}{\numberline {5}結論・今後の課題}{6}{}%
+\contentsline {subsection}{\numberline {5.1}結論}{6}{}%
+\contentsline {subsection}{\numberline {5.2}今後の課題}{6}{}%
+\contentsline {section}{謝辞}{7}{}%

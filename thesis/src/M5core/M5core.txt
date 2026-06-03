@@ -1,0 +1,186 @@
+#include <M5Unified.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
+
+// ★Wi-Fi設定
+const char* ssid = "ecl";
+const char* password = "5avscfip2p3kt";
+
+// ★サーバの送信先URL
+const char* serverUrl = "http://192.168.2.1:8080/upload";
+
+// 録音設定（16kHz, 16bit, モノラル）
+static constexpr uint32_t SAMPLE_RATE = 16000;
+static constexpr size_t MAX_RECORD_SECONDS = 15; 
+// ★修正: バッファサイズを「バイト」ではなく「サンプル数」で定義する
+static constexpr size_t MAX_SAMPLES = SAMPLE_RATE * MAX_RECORD_SECONDS; 
+
+int16_t* rec_data;              // ★修正: 16bit(2バイト)の専用の箱に変更！
+size_t rec_sample_index = 0;    // 現在録音した「サンプル数」
+bool isRecording = false;
+
+void setup() {
+    auto cfg = M5.config();
+    M5.begin(cfg);
+    M5.Display.setTextSize(2);
+
+    // PSRAM（拡張メモリ）に録音用の領域を確保（サンプル数 × 2バイト）
+    rec_data = (int16_t*)heap_caps_malloc(MAX_SAMPLES * sizeof(int16_t), MALLOC_CAP_SPIRAM);
+
+    if (rec_data == nullptr) {
+        M5.Display.setTextColor(TFT_RED);
+        M5.Display.println("Error: PSRAM Malloc Failed!");
+        while (1) { delay(100); }
+    }
+
+    // マイクの初期設定
+    auto mic_cfg = M5.Mic.config();
+    mic_cfg.sample_rate = SAMPLE_RATE;
+    mic_cfg.stereo = false; // ★追加: 確実にモノラル（1チャンネル）にする
+    M5.Mic.config(mic_cfg);
+    M5.Mic.begin();
+
+    // Wi-Fi接続
+    M5.Display.println("Wi-Fi Connecting...");
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        M5.Display.print(".");
+    }
+
+    // 画面にIPを表示して確認する用（追加）
+    M5.Display.clear();
+    M5.Display.setCursor(0, 0);
+    M5.Display.print("Mac IP: ");
+    M5.Display.println(WiFi.gatewayIP().toString());
+    delay(5000);
+
+    showStandbyScreen();
+}
+
+void loop() {
+    M5.update(); 
+
+    if (M5.Touch.getCount() > 0) {
+        auto t = M5.Touch.getDetail();
+        if (t.wasPressed()) {
+            if (!isRecording) {
+                // 録音開始
+                isRecording = true;
+                rec_sample_index = 0;
+                M5.Display.clear();
+                M5.Display.setCursor(0, 0);
+                M5.Display.setTextColor(TFT_RED);
+                M5.Display.println("Recording...");
+                M5.Display.println("Tap again to stop.");
+                delay(500);
+            } else {
+                // 録音終了と送信
+                isRecording = false;
+                delay(500);
+                sendAudioToServer();
+            }
+        }
+    }
+
+    if (isRecording) {
+        // 1024サンプルずつ録音する
+        if (rec_sample_index + 1024 <= MAX_SAMPLES) {
+            // マイクから音声を読み取る
+            if (M5.Mic.record(&rec_data[rec_sample_index], 1024, SAMPLE_RATE)) {
+                rec_sample_index += 1024; // 次は1024「サンプル」先に書き込む
+            }
+        } else {
+            // バッファが一杯になったら強制終了して送信
+            isRecording = false;
+            sendAudioToServer();
+        }
+    }
+}
+
+void sendAudioToServer() {
+    M5.Display.clear();
+    M5.Display.setCursor(0, 0);
+    M5.Display.setTextColor(TFT_YELLOW);
+    M5.Display.println("Sending to Server...");
+
+    // 送信するバイト数を計算
+    size_t send_bytes = rec_sample_index * sizeof(int16_t);
+    M5.Display.printf("Size: %d bytes\n", send_bytes);
+
+    if (send_bytes == 0) {
+        M5.Display.setTextColor(TFT_RED);
+        M5.Display.println("Error: No Audio Data!");
+        delay(3000);
+        showStandbyScreen();
+        return;
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        WiFiClient client;
+        
+        IPAddress macIP = WiFi.gatewayIP();
+        M5.Display.printf("Connecting to %s...\n", macIP.toString().c_str());
+        
+        // 自動取得したIPの8080番ポートへ接続
+        if (client.connect(macIP, 8080)) {            
+            // 1. HTTPリクエストの手紙（ヘッダー）を自作して送る
+            client.println("POST /upload HTTP/1.1");
+            client.println("Host: 192.168.2.1:8080");
+            client.println("Content-Type: application/octet-stream");
+            client.print("Content-Length: ");
+            client.println(send_bytes);
+            client.println(); // ヘッダーの終わりを示す空行
+
+            // 2. 巨大な音声データを、4096バイトずつの「小包」に分けて送る（フリーズ対策）
+            uint8_t* p = (uint8_t*)rec_data;
+            size_t remaining = send_bytes;
+            
+            while (remaining > 0) {
+                size_t chunk = (remaining > 4096) ? 4096 : remaining;
+                client.write(p, chunk);
+                p += chunk;
+                remaining -= chunk;
+                delay(2); // Wi-Fiモジュールを休ませるための微小な待機
+            }
+
+            // 3. サーバからの返事を待つ
+            int timeout = 0;
+            while (!client.available() && timeout < 150) { // 最大15秒待つ
+                delay(100);
+                timeout++;
+            }
+
+            M5.Display.clear();
+            M5.Display.setCursor(0, 0);
+
+            if (client.available()) {
+                String response = client.readStringUntil('\n'); // 1行目（結果）を読む
+                M5.Display.setTextColor(TFT_GREEN);
+                M5.Display.println("Success!");
+                M5.Display.println(response);
+            } else {
+                M5.Display.setTextColor(TFT_RED);
+                M5.Display.println("Timeout Error");
+            }
+            client.stop(); // 接続を閉じる
+            
+        } else {
+            M5.Display.setTextColor(TFT_RED);
+            M5.Display.println("Connect Failed!"); // Macに接続すらできなかった場合
+        }
+    } else {
+        M5.Display.setTextColor(TFT_RED);
+        M5.Display.println("Wi-Fi Error!");
+    }
+
+    delay(3000);
+    showStandbyScreen();
+}
+void showStandbyScreen() {
+    M5.Display.clear();
+    M5.Display.setCursor(0, 0);
+    M5.Display.setTextColor(TFT_WHITE);
+    M5.Display.println("Ready.");
+    M5.Display.println("Tap screen to record.");
+}
