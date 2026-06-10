@@ -84,15 +84,24 @@ void loop() {
 }
 
 void sendAudioToServer() {
-    M5.Display.clear();
+    Serial.println("\n[DEBUG] === sendAudioToServer 開始 ===");
+    M5.Display.fillScreen(TFT_BLACK);
     M5.Display.setCursor(0, 0);
     M5.Display.setTextColor(TFT_YELLOW);
     M5.Display.println("音声データを解析中...");
 
     WiFiClient client;
+    Serial.print("[DEBUG] サーバーに接続中... IP: ");
+    Serial.print(serverIp);
+    Serial.println(" ポート: 8080");
+
     if (client.connect(serverIp, 8080)) {
+        Serial.println("[DEBUG] サーバー接続成功！データ送信を開始します...");
+        
         // 1. 音声データの送信
         size_t send_bytes = rec_sample_index * sizeof(int16_t);
+        Serial.printf("[DEBUG] 送信データサイズ: %d bytes\n", send_bytes);
+
         client.printf("POST /upload HTTP/1.1\r\n");
         client.printf("Host: %s\r\n", serverIp);
         client.println("Content-Type: application/octet-stream");
@@ -108,48 +117,80 @@ void sendAudioToServer() {
             remaining -= chunk;
             delay(1);
         }
+        Serial.println("[DEBUG] データ送信完了。サーバーからの応答を待っています...");
 
-        // 2. 受信処理（ヘッダーを読み飛ばし、本文のみを取得）
+        // 2. 受信処理（★日本語が壊れないバッファ読み込み方式に修正）
         unsigned long timeout = millis();
-        String resultText = "";
+        String allResponse = "";
+        char rxBuffer[512]; // まとめて受け取るためのバッファ
         
+        Serial.println("[DEBUG] 受信ループに入ります（タイムアウト15秒）...");
         while (client.connected() && millis() - timeout < 15000) {
-            if (client.available()) {
-                String line = client.readStringUntil('\n');
-                if (line == "\r" || line == "") {
-                    resultText = client.readString(); // 本文を一括取得
-                    break;
-                }
+            int availableBytes = client.available();
+            if (availableBytes > 0) {
+                // バッファサイズ（511バイト）を超えないように制限して一括読み込み
+                int bytesToRead = (availableBytes > 511) ? 511 : availableBytes;
+                int readBytes = client.readBytes(rxBuffer, bytesToRead);
+                rxBuffer[readBytes] = '\0'; // 終端文字を付与
+                
+                allResponse += rxBuffer; // まとめて文字列に追加（文字化けを防ぐ）
+                timeout = millis();      // タイムアウトをリセット
             }
+            delay(10); // 短いウェイトを入れてCPU負荷を下げる
         }
         client.stop();
+        Serial.println("[DEBUG] 受信ループを抜けました。接続を閉じました。");
+        Serial.printf("[DEBUG] 受信した生データ全体の長さ: %d 文字\n", allResponse.length());
+
+        // 生データをそのままシリアルに出力して確認
+        Serial.println("----- サーバーからの生の応答（ここから） -----");
+        Serial.println(allResponse);
+        Serial.println("----- サーバーからの生の応答（ここまで） -----");
+
+        // HTTPヘッダーと本文（Body）を分離
+        String resultText = "";
+        int bodyIndex = allResponse.indexOf("\r\n\r\n");
+        if (bodyIndex != -1) {
+            resultText = allResponse.substring(bodyIndex + 4);
+        } else {
+            bodyIndex = allResponse.indexOf("\n\n");
+            if (bodyIndex != -1) {
+                resultText = allResponse.substring(bodyIndex + 2);
+            } else {
+                resultText = allResponse;
+            }
+        }
         resultText.trim(); 
 
-        // 3. 聞き取れなかった場合のエラーハンドリング（★ここを修正）
-        if (resultText == "" || resultText == "(No text detected)") {
-            M5.Display.clear();
+        Serial.print("[DEBUG] 解析されたテキスト(Body): ");
+        Serial.println(resultText);
+
+        // 3. エラーハンドリング
+        if (resultText == "" || resultText == "(No text detected)" || resultText.startsWith("HTTP/1.1 400") || resultText.startsWith("HTTP/1.1 500")) {
+            Serial.println("[DEBUG] 認識エラー、またはサーバーエラーを検出しました。");
+            M5.Display.fillScreen(TFT_BLACK);
             M5.Display.setCursor(0, 0);
             M5.Display.setTextColor(TFT_RED);
             M5.Display.println("【エラー】");
             M5.Display.println("音声が聞き取れませんでした。");
-            M5.Display.println("もう一度お話しください。");
-            delay(2500); // エラーメッセージを2.5秒間表示して終了
+            delay(4000); 
             showStandbyScreen();
-            return; // 関数をここで抜けて判定ループに行かせない
+            return; 
         }
 
         // 4. 正しく聞き取れた場合の日本語確認画面
-        M5.Display.clear();
+        Serial.println("[DEBUG] 正常にテキストを認識。画面に表示します。");
+        M5.Display.fillScreen(TFT_BLACK);
         M5.Display.setCursor(0, 0);
         M5.Display.setTextColor(TFT_CYAN);
         M5.Display.println("【認識結果】");
         M5.Display.setTextColor(TFT_WHITE);
-        M5.Display.println(resultText);
+        M5.Display.println(resultText); // これで「こんにちは」が表示されるはずです
         
         M5.Display.println("--------------------");
         M5.Display.setTextColor(TFT_YELLOW);
         M5.Display.println("この内容で記録しますか？");
-        M5.Display.println("左半分：やり直す  |  右半分：保存する");
+        M5.Display.println("左:やり直す | 右:保存する");
 
         // 5. ユーザー判定ループ
         while (true) {
@@ -158,16 +199,14 @@ void sendAudioToServer() {
                 auto t = M5.Touch.getDetail();
                 if (t.wasPressed()) {
                     if (t.x > 160) {
-                        // 右側タップ：保存（コンソール出力）
                         saveLogLocal(resultText);
-                        M5.Display.clear();
+                        M5.Display.fillScreen(TFT_BLACK);
                         M5.Display.setTextColor(TFT_GREEN);
                         M5.Display.println("保存しました！");
                         delay(1200);
                         break;
                     } else {
-                        // 左側タップ：やり直し
-                        M5.Display.clear();
+                        M5.Display.fillScreen(TFT_BLACK);
                         M5.Display.setTextColor(TFT_RED);
                         M5.Display.println("破棄しました。");
                         delay(1000);
@@ -178,10 +217,13 @@ void sendAudioToServer() {
             delay(10);
         }
     } else {
+        Serial.println("[ERROR] サーバーへの接続に失敗しました！");
+        M5.Display.fillScreen(TFT_BLACK);
         M5.Display.setTextColor(TFT_RED);
         M5.Display.println("サーバー接続失敗");
         delay(2000);
     }
+    Serial.println("[DEBUG] === sendAudioToServer 終了 ===\n");
     showStandbyScreen();
 }
 
