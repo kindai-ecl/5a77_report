@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.21.0 (TeX Live 2025/Homebrew)  (format=lualatex 2025.3.7)  29 JUN 2026 17:42
+This is LuaHBTeX, Version 1.21.0 (TeX Live 2025/Homebrew)  (format=lualatex 2025.3.7)  11 JUL 2026 14:45
  restricted system commands enabled.
 **260630.tex
 (./260630.tex
@@ -1437,8 +1437,7 @@ LaTeX Warning: Citation `kawahara2016' on page 2 undefined on input line 101.
 
 [6]
 
-[7]
-No file 260630.bbl.
+[7] (./260630.bbl)
 
 Class bxjsarticle Warning: Some old font commands were used in text:
 (bxjsarticle)                \bf
@@ -1459,14 +1458,14 @@ LaTeX Warning: There were undefined references.
 )
 
 Here is how much of LuaTeX's memory you used:
- 22401 strings out of 475506
+ 22407 strings out of 475506
  125244,1144653 words of node,token memory allocated
  1039 words of node memory still in use:
    10 hlist, 2 vlist, 5 rule, 2 glue, 4 kern, 1 glyph, 190 attribute, 57 glue_sp
 ec, 28 attribute_list, 2 write, 13 user_defined nodes
    avail lists: 1:23,2:25161,3:262,4:280,5:72,6:40,7:2840,8:1,9:1272,10:25,11:10
 
- 44768 multiletter control sequences out of 65536+600000
+ 44769 multiletter control sequences out of 65536+600000
  65 fonts using 75434511 bytes
  130i,5n,131p,1902b,461s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/opentype/public/
