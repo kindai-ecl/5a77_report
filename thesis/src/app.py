@@ -13,27 +13,24 @@ print("Whisperの準備完了！")
 
 
 # ================================================================
-# ★追加：BLEタグ検知データを受け取る専用の窓口 (ルートパス '/')
+# BLEタグ検知データを受け取る専用の窓口 (ルートパス '/')
 # ================================================================
 @app.route('/', methods=['POST'])
 def handle_ble_data():
-    # M5Stackから送られてきたJSONデータを取得
     ble_data = request.get_json(silent=True)
-    
     if ble_data:
         print("\n==================================================")
         print(f"【BLEタグ検知】 機器: {ble_data.get('machine_type')} | タグ: {ble_data.get('name')} | 電波強度: {ble_data.get('rssi')} dBm")
         print("==================================================")
         return "BLE Data Received", 200
     else:
-        # JSONではなく生のテキストなどが届いた場合のフォールバック
         raw_data = request.data.decode('utf-8', errors='ignore')
         print(f"\n[BLE宛先に不明なデータを受信]: {raw_data}")
         return "Raw Data Received", 200
 
 
 # ================================================================
-# 既存：音声データを受け取る専用の窓口 ('/upload')
+# 音声データを受け取る専用の窓口 ('/upload') [精度大幅改善版]
 # ================================================================
 @app.route('/upload', methods=['POST'])
 def upload_audio():
@@ -46,16 +43,31 @@ def upload_audio():
     timestamp = now.strftime("%Y%m%d_%H%M%S")
     wav_filename = f"recorded_audio_{timestamp}.wav"
     
-    with wave.open(wav_filename, 'wb') as wav_file:
-        wav_file.setnchannels(1)       
-        wav_file.setsampwidth(2)       
-        wav_file.setframerate(16000)   
-        wav_file.writeframes(raw_audio_data)
+    # --- M5Stack側から送られたデータ構造を判定 ---
+    # 先頭4バイトが 'RIFF'（WAVヘッダー付き）であれば直接ファイル書き込み
+    if raw_audio_data.startswith(b'RIFF'):
+        with open(wav_filename, 'wb') as f:
+            f.write(raw_audio_data)
+    else:
+        # RAW PCMデータの場合は wave モジュールでWAV化
+        with wave.open(wav_filename, 'wb') as wav_file:
+            wav_file.setnchannels(1)       
+            wav_file.setsampwidth(2)       
+            wav_file.setframerate(16000)   
+            wav_file.writeframes(raw_audio_data)
 
     print(f"\n[{wav_filename}] を保存しました！ データサイズ: {len(raw_audio_data)} bytes")
 
     print("文字起こしを開始します...")
-    result = whisper_model.transcribe(wav_filename, language="ja")
+    
+    # ★重要：initial_prompt を追加して定型フレーズに限定誘導する
+    prompt_text = "定型フレーズ：加工開始、加工終了、段取開始、段取終了。"
+    
+    result = whisper_model.transcribe(
+        wav_filename, 
+        language="ja",
+        initial_prompt=prompt_text  # これにより特定の4フレーズへの認識率が急上昇します
+    )
     
     transcribed_text = result["text"].strip()
     print("--------------------------------------------------")
