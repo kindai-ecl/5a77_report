@@ -1,0 +1,26 @@
+\contentsline {section}{\numberline {1}序論}{1}{}%
+\contentsline {subsection}{\numberline {1.1}本研究の背景}{1}{}%
+\contentsline {subsection}{\numberline {1.2}本研究の目的と学術的な問い}{1}{}%
+\contentsline {subsection}{\numberline {1.3}本書の構成}{2}{}%
+\contentsline {section}{\numberline {2}関連技術・関連研究}{3}{}%
+\contentsline {subsection}{\numberline {2.1}関連技術}{3}{}%
+\contentsline {subsubsection}{\numberline {2.1.1}Whisper}{3}{}%
+\contentsline {subsubsection}{\numberline {2.1.2}大規模言語モデル（GPT）}{3}{}%
+\contentsline {subsubsection}{\numberline {2.1.3}M5CoreS3およびBLE通信}{3}{}%
+\contentsline {subsection}{\numberline {2.2}関連研究}{3}{}%
+\contentsline {subsubsection}{\numberline {2.2.1}音声認識の業務利用と課題}{3}{}%
+\contentsline {section}{\numberline {3}研究内容}{5}{}%
+\contentsline {subsection}{\numberline {3.1}システム全体構成}{5}{}%
+\contentsline {subsection}{\numberline {3.2}音声認識・データ送信処理}{5}{}%
+\contentsline {subsection}{\numberline {3.3}BLEによる位置・対象識別処理}{5}{}%
+\contentsline {subsection}{\numberline {3.4}自然言語処理（GPT）による意図解析とログ構造化}{6}{}%
+\contentsline {subsection}{\numberline {3.5}利用ツール・開発環境}{6}{}%
+\contentsline {section}{\numberline {4}結果・考察}{7}{}%
+\contentsline {subsection}{\numberline {4.1}実験および検証}{7}{}%
+\contentsline {subsection}{\numberline {4.2}評価結果}{7}{}%
+\contentsline {subsection}{\numberline {4.3}考察}{7}{}%
+\contentsline {section}{\numberline {5}結論・今後の課題}{9}{}%
+\contentsline {subsection}{\numberline {5.1}結論}{9}{}%
+\contentsline {subsection}{\numberline {5.2}今後の課題}{9}{}%
+\contentsline {section}{謝辞}{10}{}%
+\contentsline {section}{参考文献}{11}{}%
