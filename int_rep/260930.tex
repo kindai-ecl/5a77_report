@@ -1,0 +1,126 @@
+\documentclass[a4paper,10pt,twocolumn,ja=standard,lualatex]{bxjsarticle}
+\usepackage{luatexja}
+\usepackage{geometry}
+\geometry{margin=8mm} 
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+
+\makeatletter
+% セクションの見出しマージン調整
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+  {-0.4ex plus -0.1ex minus -0.1ex}%
+  {0.2ex plus 0.1ex}%
+  {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {-0.3ex plus -0.1ex minus -0.1ex}%
+  {0.1ex plus 0.1ex}%
+  {\normalfont\normalsize\bfseries}}
+
+% \maketitle のヘッダーレイアウトの再定義（著者名を完全に右寄せ＆日付非表示）
+\renewcommand{\@maketitle}{%
+  \newpage
+  \null
+  \vspace{-10mm}
+  \begin{center}%
+    {\Large\bfseries \@title \par}% タイトル（中央揃え）
+  \end{center}%
+  \vspace{2mm}%
+  {\raggedleft\large \@author \par}% 著者名（右寄せ）
+  \vspace{4mm}%
+}
+\makeatother
+
+\setlist{leftmargin=*,noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt} 
+
+\title{音声認識を用いた作業ログ自動記録システムの構築と業務効率化に関する研究}
+\author{電子商取引研究室 内山 敦也}
+\date{} % 日付を空に指定
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\section{序論}
+\subsection{研究背景と社会的要請}
+経済産業省等による『2025年版ものづくり白書』によると、国内製造業の就業者数は2024年の1,055万人から2025年には1,046万人へ減少した \cite{monodukuri2025}。さらに中小製造業の従業員数過不足DIは2024年に「\(-18.2\)」を記録し、深刻な人手不足が継続している \cite{monodukuri2025}。
+
+現場における生産性向上と作業者の業務負担軽減が至急の課題である一方で、作業工程や工程遷移の記録は、今なお紙のチェックシートへの手書きや共有端末への入力作業に依存している。これらは作業の中断、手入力に伴う不備、ならびに油分や汚れが付着した手での操作の難しさといった課題を引き起している。
+
+\subsection{研究目的と学術的な問い}
+本研究の目的は、超小型エッジデバイス（M5CoreS3）とクラウドAI（WhisperおよびGPT-4）を統合し、ハンズフリーの作業ログ自動記録システムを構築することである。
+
+本研究における学術的な問いを以下のように設定する。
+\begin{quote}
+\small\itshape
+「計算リソースが極めて制限されたエッジマイコン（ESP32）環境において、発声対象を『加工開始』『加工完了』『段取開始』『段取終了』の4定型フレーズに限定し、物理空間情報である『BLE電波強度（RSSI）』と『音声・言語特徴』を複合制御することで、エッジ側の処理負荷を高めることなく環境騒音や第三者の発話による音声誤検知・誤記録をどこまで低減できるか？」
+\end{quote}
+
+% システム概要図
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=0.9cm and 0.8cm,
+    box/.style={draw, rectangle, rounded corners=2pt, align=center, font=\scriptsize, fill=gray!10, inner sep=3pt},
+    cloudbox/.style={draw, rectangle, rounded corners=2pt, align=center, font=\scriptsize, fill=blue!10, inner sep=3pt},
+    arrow/.style={-Stealth, thick}
+]
+    % ノード配置
+    \node[box] (edge) {\textbf{エッジ端末 (M5CoreS3)}\\ 音声録音 (16kHz) / VAD\\ BLEスキャン (RSSI判定)};
+    \node[cloudbox, below=of edge] (server) {\textbf{クラウド AI 解析基盤}\\ Whisper: 音声 \(\rightarrow\) テキスト変換\\ GPT-4: 4定型フレーズの抽出・構造化};
+    \node[box, below=of server] (db) {\textbf{データベース / Web画面}\\ 作業ログ蓄積・可視化ダッシュボード};
+
+    % 矢印接続
+    \draw[arrow] (edge) -- node[right, font=\tiny] {Wi-Fi (音声データ + RSSI)} (server);
+    \draw[arrow] (server) -- node[right, font=\tiny] {JSONログ (カテゴリ・時刻)} (db);
+\end{tikzpicture}
+\caption{\small 提案システムの全体構成図}
+\label{fig:system_overview}
+\end{figure}
+
+\section{現在の進捗状況}
+現在までに、本提案システムの主要基盤となるハードウェア制御およびクラウド連携の初期実装を完了している（図\ref{fig:system_overview}）。
+
+\begin{enumerate}
+    \item \textbf{M5CoreS3エッジ端末制御の実装}: 内蔵マイクから16kHz/16bit PCM音声を動的バッファへ録音し、Wi-Fi経由でサーバへ非同期送信する機構を構築した。ESP32-S3のデュアルコアを活用し、Core 1でUI描画と音声処理を実行しつつ、Core 0でバックグラウンドでのBLEスキャン処理を並行実行するマルチタスク制御を実現した。
+    \item \textbf{音声解析・構造化処理の実装}: 作業者に「加工開始」「加工完了」「段取開始」「段取終了」の定型フレーズを発声してもらう運用とし、受信音声をWhisperでテキスト化後、GPT-4を介して対象コマンドの抽出および正確なJSON構造化を行う解析パイプラインを構築・確認した。
+    \item \textbf{基礎動作検証}: 静寂および疑似環境下での実証テストを行い、発音終了から結果応答まで平均2.5～4.0秒のレスポンスで正しく記録されることを確認した。
+\end{enumerate}
+
+\section{今後の実装および開発計画}
+今後はシステムの精度向上・堅牢化および現場運用に向け、以下の機能実装と技術的拡張を順次行う。
+
+\begin{itemize}
+    \item \textbf{BLE近接フィルタリングおよび動的閾値制御の実装}
+    
+    作業者が特定の作業エリア（工作機械前等）に滞在している場合のみ音声入力を受け付けるよう、BLEビーコンの電波強度（RSSI）に基づく排他制御ロジックを実装する。また、通信環境や遮蔽物による電波減衰の影響を緩和するため、直近のRSSI推移から移動平均を算出して動的に閾値を変更するアルゴリズムを導入する。
+    
+    \item \textbf{エッジ側でのVAD（音声活動検出）ノイズキャンセル処理の導入}
+    
+    現在サーバ側へ一括送信している音声データに対し、M5CoreS3側の前処理としてWebRTC VAD等の軽量アルゴリズムを移植・実装する。これにより、無音区間や明らかな突発的工場騒音（金属打撃音等）を送信前に切り捨て、通信帯域の削減とクラウド側の誤認識防止を図る。
+        
+    \item \textbf{意図判定プロンプトの厳密化と例外応答処理}
+    
+    対象の4フレーズと全く無関係な発声や曖昧な指示が入力された際、GPT-4が誤って4カテゴリのいずれかに分類することを防ぐため、Strict JSON Schema制約および「該当なし」判定を出力するガードレールプロンプトを追加実装する。
+    
+    \item \textbf{現場評価用ダッシュボードおよびデータベース連携機能の構築}
+    
+    構造化された作業ログ（作業者ID、工程カテゴリ、BLE位置情報、タイムスタンプ）をリアルタイムに集計・可視化するWebベースのダッシュボードを構築し、実際の現場運用における作業時間の測定と効果検証を行う。
+\end{itemize}
+
+\begin{thebibliography}{9}
+\small
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\bibitem{monodukuri2025}
+経済産業省・厚生労働省・文部科学省: 「2025年版ものづくり白書」, 2025.
+\bibitem{sato2020}
+佐藤 他: 「BLEビーコンを用いた位置推定技術の現場作業管理への適用」, {\it 電気学会論文誌Ｃ}, Vol.140, No.5, 2020.
+\bibitem{openai2023gpt4}
+OpenAI: "GPT-4 Technical Report," {\it arXiv:2303.08774}, 2023.
+\end{thebibliography}
+
+\end{document}
