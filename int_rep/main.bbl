@@ -1,0 +1,21 @@
+\begin{thebibliography}{1}
+
+\bibitem{monodukuri2025}
+{経済産業省・厚生労働省・文部科学省}.
+\newblock {2025年版ものづくり白書}.
+\newblock \url{https://www.meti.go.jp/report/whitepaper/mono/2025/index.html},
+  2025.
+\newblock 参照日：2026年10月13日.
+
+\bibitem{radford2022whisper}
+Alec Radford, Jong~Wook Kim, Tao Xu, Greg Brockman, Christine McLeavey, and
+  Ilya Sutskever.
+\newblock Robust speech recognition via large-scale weak supervision.
+\newblock {\em arXiv preprint arXiv:2212.04356}, 2022.
+
+\bibitem{openai2023gpt4}
+{OpenAI}.
+\newblock {GPT-4} technical report.
+\newblock {\em arXiv preprint arXiv:2303.08774v1}, 2023.
+
+\end{thebibliography}
