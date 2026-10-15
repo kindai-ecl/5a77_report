@@ -1,0 +1,157 @@
+\documentclass[a4paper,10pt,twocolumn,ja=standard,lualatex,geometry=user]{bxjsarticle}
+
+\usepackage{luatexja}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+% クラスの文字幅・行数への丸めを避け、指定寸法をそのまま使用する。
+\usepackage[top=24mm,bottom=25mm,left=15mm,right=15mm]{geometry}
+\setlength{\columnsep}{8mm}
+% 本文領域248mmを、本文のみの段で約46行となる行送りに設定する。
+% タイトル・図・見出しのある段では、その分だけ実際の本文行数が減る。
+\linespread{1}
+\newlength{\BodyBaseline}
+\setlength{\BodyBaseline}{\dimexpr(\textheight-10pt)/45\relax}
+
+\makeatletter
+\let\originalnormalsize\normalsize
+\renewcommand{\normalsize}{%
+  \originalnormalsize
+  \fontsize{10pt}{\BodyBaseline}\selectfont}
+\normalsize
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+  {-0.4ex plus -0.1ex minus -0.1ex}%
+  {0.2ex plus 0.1ex}{\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {-0.3ex plus -0.1ex minus -0.1ex}%
+  {0.1ex plus 0.1ex}{\normalfont\normalsize\bfseries}}
+\renewcommand{\@maketitle}{%
+  \newpage
+  {\centering\Large\bfseries\@title\par}
+  \vspace{2mm}%
+  {\raggedleft\large\@author\par}
+  \vspace{4mm}}
+\makeatother
+
+\setlist{leftmargin=*,noitemsep,topsep=2pt,parsep=0pt,partopsep=0pt}
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\title{音声認識を用いた作業ログ自動記録システムの構築と業務効率化に関する研究}
+\author{電子商取引研究室\quad 内山 敦也}
+\date{}
+
+\begin{document}
+\maketitle
+\pagestyle{empty}
+\thispagestyle{empty}
+\raggedbottom
+
+\section{序論}
+国内製造業では人手不足が続いており、作業者の負担軽減と生産性向上が求められる\cite{monodukuri2025}。
+紙や端末による作業記録には、作業の中断や入力漏れという問題がある。
+本研究は、作業ログの分析から工程の改善点を見出し、生産性向上につなげることを目的とする。
+提案手法では、M5CoreS3によるBLE近接判定と音声検出を組み合わせ、クラウド上で4種類の定型フレーズを作業ログに変換する。
+
+\begin{figure}[H]
+  \centering
+  % 2段組の片方の段内で、左に構成図、右に画像2枚を配置する。
+  \begin{minipage}[c]{0.56\linewidth}
+    \centering
+    \resizebox{\linewidth}{!}{%
+      \begin{tikzpicture}[
+        node distance=8mm,
+        box/.style={draw,rounded corners=2pt,align=center,
+          font=\scriptsize,text width=42mm,inner sep=4pt,fill=gray!8},
+        arrow/.style={-Stealth,thick}]
+        \node[box] (edge) {\textbf{エッジ端末：M5CoreS3}\\
+          BLE近接判定・音声検出\\音声録音（16 kHz / 16 bit）};
+        \node[box,below=of edge,fill=blue!8] (server)
+          {\textbf{サーバ：クラウドAI連携}\\
+           Whisper：音声のテキスト化\\GPT-4：作業カテゴリ抽出};
+        \node[box,below=of server,dashed] (db)
+          {\textbf{データベース・Web画面}\\
+           作業ログの蓄積・工程の可視化\\（今後実装）};
+        \draw[arrow] (edge) -- node[right,font=\tiny] {音声データ} (server);
+        \draw[arrow] (server) -- node[right,font=\tiny] {構造化ログ} (db);
+      \end{tikzpicture}}
+    \par\smallskip
+    {\scriptsize (a) システム構成}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.40\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{recording.png}
+    \par{\scriptsize (b) 音声認識中の画面}
+    \vspace{2mm}
+    \includegraphics[width=\linewidth]{recognized.png}
+    \par{\scriptsize (c) 検知成功の画面}
+  \end{minipage}
+  \caption{提案システムの構成と端末画面}
+  \label{fig:system}
+\end{figure}
+
+\section{研究内容}
+\subsection{システム構成}
+図\ref{fig:system}にシステム構成と端末画面を示す。
+M5CoreS3は、BLEタグの接近時に音声を録音し、Wi-Fiでサーバへ送信する。
+サーバではWhisperで音声をテキスト化する。
+GPT-4で作業カテゴリを抽出し、JSON形式に構造化する。
+対象は「加工開始」「加工終了」「段取開始」「段取終了」の4種類とする。
+図\ref{fig:system}(b)では対象フレーズとRSSIを表示する。
+図\ref{fig:system}(c)では「加工開始」の検知結果を表示する。
+ログは作業カテゴリ、時刻、工作機械IDで構成する。
+工作機械IDは設置端末との対応付けから取得する。
+データベースへの蓄積とWeb画面での可視化は、今後の実装対象とする。
+
+\subsection{BLE近接判定と録音制御}
+音量だけでは発話と騒音を区別できず、BLEだけでは作業内容を記録できない。
+そこで、BLEによる接近判定とマイク入力を組み合わせ、作業者の不在時に生じる不要な録音を抑える。
+BLEスキャンと音声処理を並行して実行する。
+接近判定にはRSSIの移動平均を用い、一時的な変動を抑える。
+接近中に一定以上の音が150 ms続くと録音を開始する。
+無音が400 ms続くと終了する。
+頭切れを防ぐため、開始前400 msの音声も含める。
+
+\section{現在の進捗と動作確認結果}
+BLEスキャン、接近判定、録音制御、およびサーバ連携を実装した。
+WhisperとGPT-4による解析処理を構築し、端末で「加工開始」の検知成功表示を確認した。
+予備確認での応答時間は2.5～4.0秒であった。
+測定条件と試行回数は未整理のため、参考値とする。
+工場での認識精度と負担軽減効果は未評価である。
+
+\section{今後の計画}
+\begin{enumerate}
+  \item \textbf{2026年10月：近接判定の調整}\quad
+  現場のRSSIから移動平均の窓幅と閾値を調整する。
+  作業者の向きや遮蔽物の影響を確認し、接近判定の安定性と録音開始の遅れを評価する。
+  接近・離脱の閾値の分離も検討する。
+
+  \item \textbf{11月：騒音・対象外発話への対策}\quad
+  軽量なVADと対象外発話の「該当なし」判定を導入する。
+  機械の稼働音や第三者の会話を含む条件で性能を検証する。
+  接近中の第三者の発話は併用だけでは除外できないため、残る誤記録を評価する。
+  ノイズ低減処理の必要性も検討する。
+
+  \item \textbf{12月：ログ蓄積と現場評価}\quad
+  作業カテゴリ、時刻、工作機械IDを蓄積するデータベースとWeb画面を構築する。
+  BLEタグと作業者を対応付け、開始・終了ログから作業時間を算出する。
+  4フレーズを同数ずつ発声し、距離、騒音条件、試行回数を記録する。
+  近接判定の有無で誤記録率を比較し、認識成功率、取りこぼし率、応答時間を評価する。
+
+  \item \textbf{2027年1月：工程分析と改善案の整理}\quad
+  加工・段取時間のばらつきや工程間の空白時間を可視化する。
+  作業者への確認を通じて要因を整理し、改善候補を抽出する。
+  手書きや端末入力との比較で記録時間と作業の中断回数を調べ、結果をまとめる。
+\end{enumerate}
+
+% 指定された2件は出版元の巻号・ページと一致せず、書誌情報を要確認。
+% 本文未確認のため、Whisper/GPT-4の根拠として引用しない。
+\nocite{kawahara2016,onishi2018}
+\begingroup
+\small
+\bibliographystyle{junsrt}
+\bibliography{references}
+\endgroup
+\end{document}

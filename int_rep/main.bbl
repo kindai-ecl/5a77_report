@@ -7,15 +7,16 @@
   2025.
 \newblock 参照日：2026年10月13日.
 
-\bibitem{radford2022whisper}
-Alec Radford, Jong~Wook Kim, Tao Xu, Greg Brockman, Christine McLeavey, and
-  Ilya Sutskever.
-\newblock Robust speech recognition via large-scale weak supervision.
-\newblock {\em arXiv preprint arXiv:2212.04356}, 2022.
+\bibitem{kawahara2016}
+{河原 英紀}.
+\newblock 音声認識技術の現状と現場業務支援への応用課題.
+\newblock 日本音響学会誌, Vol.~72, No.~8, 2016.
 
-\bibitem{openai2023gpt4}
-{OpenAI}.
-\newblock {GPT-4} technical report.
-\newblock {\em arXiv preprint arXiv:2303.08774v1}, 2023.
+\bibitem{onishi2018}
+{大西 智和}ほか.
+\newblock
+  音声認識技術を活用した現場作業支援システムの試作と評価.
+\newblock 情報処理学会研究報告（MPS）, Vol. 2018-MPS-117, No.~10,
+  2018.
 
 \end{thebibliography}
